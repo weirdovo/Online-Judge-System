@@ -1,6 +1,8 @@
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from datetime import datetime
+from app.db import Localsession
+from app.schemas import New_User
 
 def make_response(code, msg, data):
     return JSONResponse(status_code = code, content = {
@@ -12,17 +14,22 @@ def make_response(code, msg, data):
 def get_time():    
     now = datetime.now()
     return now.strftime("%Y-%m-%d")
-    
-def get_role(request : Request):
-    from app.authorization import user_base   # break circular import
-    name = request.session.get("username")   
-    if not name:
-        return "guest"
-    else:
-        return user_base[name].role
-    
+
+def get_db():
+    db = Localsession()
+    try:
+        yield db
+    finally:
+        db.close()
+
 def admin_guard(request : Request):
-    if get_role(request) == "admin":
+    name = request.session.get("role")
+    if name == "admin":
+        return True
+    return False
+
+def newuser_validation(user : New_User):
+    if len(user.username) >= 3 and len(user.username) <= 40 and len(user.password) >=6:
         return True
     return False
     
