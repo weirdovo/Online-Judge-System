@@ -1,26 +1,40 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from starlette.middleware.sessions import SessionMiddleware
 from app import problems, authorization
 from app.models import User
 from app.problems import make_response
-from app.authorization import user_database
+from app.db import engine, Base
+from app.utils import get_db
 from fastapi.exceptions import RequestValidationError
+from sqlalchemy.orm import Session
+from contextlib import asynccontextmanager
 
+Base.metadata.create_all(bind = engine) #
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    db = next(get_db())
+    exist_admin = db.query(User).filter_by(username = "admin").first()
+    if not exist_admin:
+        admin = User(username = "admin", password = "admin", role = "admin")  # Create administrator
+        db.add(admin)
+        db.commit()
+        db.refresh(admin)
+    yield
 
 app = FastAPI(
-    title="Simple OJ System - Student Template",
-    description="A simple online judge system for programming assignments",
-    version="1.0.0"
+    title = "Simple OJ System - Student Template",
+    description = "A simple online judge system for programming assignments",
+    version = "1.0.0",
+    lifespan = lifespan
 )
-app.add_middleware(SessionMiddleware) # add secret-key
+app.add_middleware(SessionMiddleware, secret_key = "add_a_real_secret_key_later") # add secret-key
 
 app.include_router(problems.router)
 app.include_router(authorization.router)
 
-
 @app.get("/")
 async def welcome():
-    user_database["admin"] = User("0", "admin", "admin", "admin")    # Create administrator
     return "Welcome!"
 
 # handle different kinds of exceptions
