@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request, Depends
 from starlette.middleware.sessions import SessionMiddleware
-from app import problems, authorization
+from app import problems, users, submissions
 from app.models import User
 from app.problems import make_response
 from app.db import engine, Base
@@ -16,7 +16,7 @@ async def lifespan(app: FastAPI):
     db = next(get_db())
     exist_admin = db.query(User).filter_by(username = "admin").first()
     if not exist_admin:
-        admin = User(username = "admin", password = "admintestpassword", role = "admin")  # Create administrator
+        admin = User(username = "admin", password = "admin", role = "admin")  # Create administrator
         db.add(admin)
         db.commit()
         db.refresh(admin)
@@ -31,7 +31,8 @@ app = FastAPI(
 app.add_middleware(SessionMiddleware, secret_key = "add_a_real_secret_key_later") # add secret-key
 
 app.include_router(problems.router)
-app.include_router(authorization.router)
+app.include_router(users.router)
+app.include_router(submissions.router)
 
 @app.get("/")
 async def welcome():
@@ -48,5 +49,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     elif "/admin" in path:
         msg = "invalid params"
     elif "/users" in path:
+        msg = "invalid params"
+    elif "/submissions" in path:
         msg = "invalid params"
     return make_response(400, msg, None)    
