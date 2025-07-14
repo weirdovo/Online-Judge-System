@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean, Text, JSON, Float
+from sqlalchemy import Column, Integer, String, Boolean, Text, JSON, Float, ForeignKey
+from sqlalchemy.orm import relationship
 from app.db import Base
 from app.utils import get_time
 
@@ -12,6 +13,8 @@ class User(Base):
     submit_count = Column(String , default = 0)
     resolve_count = Column(String , default = 0)
     is_banned = Column(Boolean, default = False)
+    
+    submissions = relationship("Submission", back_populates="user")
         
 class Problem(Base):
     __tablename__ = "problems"
@@ -27,10 +30,12 @@ class Problem(Base):
     hint = Column(Text, nullable=True)
     source = Column(String, nullable=True)
     tags = Column(JSON, nullable=True)
-    time_limit = Column(Float, nullable=True)
-    memory_limit = Column(Integer, nullable=True)
+    time_limit = Column(Float, nullable=True, default = 3.0)
+    memory_limit = Column(Integer, nullable=True, default = 128)
     author = Column(String, nullable=True)
     difficulty = Column(String, nullable=True)
+    
+    submissions = relationship("Submission", back_populates="problem")
     
     def to_dict(self):
         return {"id" : self.id,
@@ -44,8 +49,27 @@ class Problem(Base):
                 "hint" : self.hint if self.hint is not None else "",
                 "source" : self.source if self.source is not None else "",
                 "tags" : self.tags if self.tags is not None else [],
-                "time_limit" : self.time_limit if self.time_limit is not None else 0.0,
-                "memory_limit" : self.memory_limit if self.memory_limit is not None else 0,
+                "time_limit" : self.time_limit,
+                "memory_limit" : self.memory_limit,
                 "author" : self.author if self.author is not None else "",
                 "difficulty" : self.difficulty if self.difficulty is not None else ""
                 }
+        
+class Submission(Base):
+    __tablename__ = "submissions"
+    id = Column(Integer, primary_key = True, index = True)
+    user = relationship("User", back_populates="submissions")
+    problem = relationship("Problem", back_populates="submissions")
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    problem_id = Column(String, ForeignKey("problems.id"), nullable=False)
+    code = Column(String)
+    status = Column(String)
+    detail = Column(JSON, default = {})
+    score = Column(Integer, default = 0)
+    counts = Column(Integer, default = 0)
+    language = Column(String, default = "python")
+    
+    def rejudge_init(self):
+        self.status = "pending"
+        self.score = 0
+        self.counts = 0
