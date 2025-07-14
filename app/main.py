@@ -16,7 +16,7 @@ async def lifespan(app: FastAPI):
     db = next(get_db())
     exist_admin = db.query(User).filter_by(username = "admin").first()
     if not exist_admin:
-        admin = User(username = "admin", password = "admin", role = "admin")  # Create administrator
+        admin = User(username = "admin", password = "admintestpassword", role = "admin")  # Create administrator
         db.add(admin)
         db.commit()
         db.refresh(admin)
