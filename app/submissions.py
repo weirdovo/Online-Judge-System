@@ -44,7 +44,7 @@ async def get_result(request : Request, submission_id : int, db : Session = Depe
     task = db.query(Submission).filter_by(id = submission_id).first()
     if not task:
         return make_response(404, "submission does not exist", None)
-    if not admin_guard(request) and this_id != task.user_id:
+    if admin_guard(request) and this_id != task.user_id:
         return make_response(403, "permission denied", None)
     if not task:
         return make_response(404, "submission does not exist", None)
@@ -57,9 +57,9 @@ async def get_submission(request : Request, lis : submission_list = Depends(), d
     user_id = request.session.get("user_id")
     if not user_id:
         return make_response(401, "not logged in", None)
-    if not admin_guard(request) and (lis.user_id is not None and user_id != lis.user_id):
+    if admin_guard(request) and (lis.user_id is not None and user_id != lis.user_id):
         return make_response(403, "permission denied", None)
-    if not admin_guard(request) and (lis.user_id is None):
+    if admin_guard(request) and (lis.user_id is None):
         lis.user_id = user_id
     
     query = db.query(Submission)
@@ -95,7 +95,7 @@ async def get_submission(request : Request, lis : submission_list = Depends(), d
 async def rejudge(request : Request, submission_id : int, db : Session = Depends(get_db)):
     if not request.session.get("user_id"):
         return make_response(401, "not logged in", None)
-    if not admin_guard(request):
+    if admin_guard(request):
         return make_response(403, "permission denied", None)
     sub = db.query(Submission).filter_by(id = submission_id).first()
     if sub is None:

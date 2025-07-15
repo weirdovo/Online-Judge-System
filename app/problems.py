@@ -30,7 +30,7 @@ async def add_problem(problem : Problem_, request : Request, db : Session = Depe
 
 @router.delete("/api/problems/{id}")
 async def delete_problem(id : str, request : Request, db : Session = Depends(get_db)):
-    if not admin_guard(request):
+    if admin_guard(request):
         return make_response(401, "permission denied", None)
     problem = db.query(Problem).filter_by(id = id).first()
     if not problem:

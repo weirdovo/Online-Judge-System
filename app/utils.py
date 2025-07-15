@@ -25,8 +25,8 @@ def get_db():
 def admin_guard(request : Request):
     name = request.session.get("role")
     if name == "admin":
-        return True
-    return False
+        return False
+    return True
 
 def newuser_validation(user : New_User):
     if len(user.username) >= 3 and len(user.username) <= 40 and len(user.password) >=6:

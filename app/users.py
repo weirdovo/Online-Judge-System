@@ -39,7 +39,7 @@ async def create_admin(request : Request, user_ : New_User, db : Session = Depen
     if not newuser_validation(user_):
         return make_response(400, "invalid username or password", None) 
 
-    if not admin_guard(request):
+    if admin_guard(request):
         return make_response(403, "Permission denied", None)
     
     new_admin = User(username = user_.username, password = user_.password, role = "admin")
@@ -83,7 +83,7 @@ async def get_info(request : Request, user_id : int, db : Session = Depends(get_
     this_id = request.session.get("user_id")
     if not this_id:
         return make_response(401, "not logged in", None)
-    if not (admin_guard(request) or (this_id == user_id)):
+    if admin_guard(request) and this_id != user_id:
         return make_response(403, "permission denied", None)
     this_user = db.query(User).filter_by(id = user_id).first()
     if not this_user:
@@ -102,7 +102,7 @@ async def update_authority(request : Request, user_id : int, role_ : Role, db : 
     this_role = request.session.get("role")
     if not this_role:
         return make_response(401, "not logged in", None)
-    if not admin_guard(request):
+    if admin_guard(request):
         return make_response(403, "permission denied", None)
     user = db.query(User).filter_by(id = user_id).first()
     if not user:
@@ -123,7 +123,7 @@ async def user_list(request : Request, page = 1, page_size = 10, db : Session = 
     this_id = request.session.get("user_id")
     if not this_id:
         return make_response(401, "not logged in", None)
-    if not admin_guard(request):
+    if admin_guard(request):
         return make_response(403, "permission denied", None)
     if page < 1 or page_size <= 0:
         return make_response(400, "invalid params", None)
