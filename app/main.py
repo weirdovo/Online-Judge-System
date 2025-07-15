@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request, Depends
 from starlette.middleware.sessions import SessionMiddleware
-from app import problems, users, submissions, languages
+from app import problems, users, submissions, languages, logs
 from app.models import User, Language
 from app.problems import make_response
 from app.db import engine, Base
@@ -40,6 +40,7 @@ app.include_router(problems.router)
 app.include_router(users.router)
 app.include_router(submissions.router)
 app.include_router(languages.router)
+app.include_router(logs.router)
 
 @app.get("/")
 async def welcome():
@@ -60,5 +61,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     elif "/submissions" in path:
         msg = "invalid params"
     elif "/languages" in path:
+        msg = "invalid params"
+    elif "/logs" in path:
         msg = "invalid params"
     return make_response(400, msg, None)    

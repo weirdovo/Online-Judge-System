@@ -63,3 +63,18 @@ class new_language(BaseModel):
     
 class public_cases(BaseModel):
     public_cases : bool = False
+    
+class log_history(BaseModel):
+    user_id : Optional[int] = None
+    problem_id : Optional[str] = None
+    page : Optional[int] = None
+    page_size : Optional[int] = None
+    
+    def valid_params(self):
+        if self.user_id is None and self.problem_id is None:
+            return False
+        if self.page is None:
+            self.page = 1
+        elif self.page is not None and self.page_size is None:
+            return False
+        return True

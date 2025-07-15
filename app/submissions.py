@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, Depends
 from sqlalchemy.orm import Session
 from app.db import Localsession
-from app.models import User, Problem, Submission, Language
+from app.models import User, Problem, Submission, Language, LogHistory
 from app.utils import get_db, make_response, admin_guard
 from app.judge import run_judge
 from app.schemas import submission, submission_list
@@ -114,11 +114,21 @@ async def get_log(request : Request, submission_id : int, db : Session = Depends
     sub = db.query(Submission).filter_by(id = submission_id).first()
     if not sub:
         return make_response(404, "submission does not exist", None)
+    
+    log_his = LogHistory(user_id = user_id, problem_id = sub.problem_id)
     if admin_guard(request) and sub.user_id != user_id and sub.problem.public_cases is False:
+        log_his.status = 403
+        db.add(log_his)
+        db.commit()
+        db.refresh(log_his)
         return make_response(403, "permission denied", None)
     data = {
         "details" : sub.detail,
         "score" : sub.score,
         "counts" : sub.counts
     }
+    log_his.status = 200
+    db.add(log_his)
+    db.commit()
+    db.refresh(log_his)
     return make_response(200, "success", data)

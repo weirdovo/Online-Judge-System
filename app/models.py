@@ -85,3 +85,11 @@ class Language(Base):
     run_cmd = Column(String, nullable = False)
     time_limit = Column(Float, nullable = True, default = 3.0)
     memory_limit = Column(Integer, nullable = True, default = 128)
+    
+class LogHistory(Base):
+    __tablename__ = "loghistory"
+    id = Column(Integer, primary_key = True, index = True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    problem_id = Column(String, ForeignKey("problems.id"), nullable=False)
+    time = Column(String, default = get_time())
+    status = Column(Integer, nullable=False)
