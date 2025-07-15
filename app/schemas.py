@@ -52,3 +52,11 @@ class submission_list(BaseModel):
         if self.status not in ["success", "pending", "error"]:
             return False
         return True
+    
+class new_language(BaseModel):
+    name : str
+    file_ext : str
+    compile_cmd : Optional[str]
+    run_cmd : str
+    time_limit : Optional[float]
+    memory_limit : Optional[int]
