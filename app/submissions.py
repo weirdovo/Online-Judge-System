@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, Depends
 from sqlalchemy.orm import Session
 from app.db import Localsession
-from app.models import User, Problem, Submission
+from app.models import User, Problem, Submission, Language
 from app.utils import get_db, make_response, admin_guard
 from app.judge import run_judge
 from app.schemas import submission, submission_list
@@ -11,6 +11,9 @@ router = APIRouter(prefix = "/api/submissions")
 
 @router.post("/")
 async def submit_code(request : Request, submiss : submission, db : Session = Depends(get_db)):
+    language = db.query(Language).filter_by(name = submiss.language).first()
+    if not language:
+        return make_response(400, "invalid params", None)
     user_id = request.session.get("user_id")
     if not user_id:
         return make_response(401, "not logged in", None)
@@ -29,7 +32,7 @@ async def submit_code(request : Request, submiss : submission, db : Session = De
     db.commit()
     db.refresh(sub)
     new_db = Localsession()  # new session!!!
-    asyncio.create_task(run_judge(sub.id, submiss.code, new_db))
+    asyncio.create_task(run_judge(sub.id, submiss, new_db))
     return make_response(200, "success", {"submission_id" : sub.id, "status" : "pending"})
     
     
