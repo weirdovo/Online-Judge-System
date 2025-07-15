@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request, Depends
 from starlette.middleware.sessions import SessionMiddleware
-from app import problems, users, submissions, languages, logs
+from app import problems, users, submissions, languages, logs, reset
 from app.models import User, Language
 from app.problems import make_response
 from app.db import engine, Base
@@ -41,6 +41,7 @@ app.include_router(users.router)
 app.include_router(submissions.router)
 app.include_router(languages.router)
 app.include_router(logs.router)
+app.include_router(reset.router)
 
 @app.get("/")
 async def welcome():
