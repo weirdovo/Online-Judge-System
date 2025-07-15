@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 fastapi
 uvicorn
 pydantic
@@ -6,3 +7,15 @@ httpx
 itsdangerous
 sqlalchemy
 contextlib
+=======
+# Core dependencies
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+starlette>=0.27.0
+
+# Testing dependencies
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+httpx>=0.25.0
+>>>>>>> 9691da94b6a94837153034155a90d6243e1b15c3
