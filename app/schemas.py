@@ -56,7 +56,7 @@ class submission_list(BaseModel):
 class new_language(BaseModel):
     name : str
     file_ext : str
-    compile_cmd : Optional[str]
+    compile_cmd : Optional[str] = None
     run_cmd : str
-    time_limit : Optional[float]
-    memory_limit : Optional[int]
+    time_limit : Optional[float] = None
+    memory_limit : Optional[int] = None
