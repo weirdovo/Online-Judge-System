@@ -105,3 +105,20 @@ async def rejudge(request : Request, submission_id : int, db : Session = Depends
     db.refresh(sub)
     asyncio.create_task(run_judge(sub.id, sub.code, sub.problem))
     return make_response(200, "rejudge started", {"submission_id" : sub.id, "status" : "pending"})
+
+@router.get("/{submission_id}/log")
+async def get_log(request : Request, submission_id : int, db : Session = Depends(get_db)):
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return make_response(401, "not logged in", None)
+    sub = db.query(Submission).filter_by(id = submission_id).first()
+    if not sub:
+        return make_response(404, "submission does not exist", None)
+    if admin_guard(request) and sub.user_id != user_id and sub.problem.public_cases is False:
+        return make_response(403, "permission denied", None)
+    data = {
+        "details" : sub.detail,
+        "score" : sub.score,
+        "counts" : sub.counts
+    }
+    return make_response(200, "success", data)

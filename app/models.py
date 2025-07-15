@@ -35,6 +35,8 @@ class Problem(Base):
     author = Column(String, nullable=True)
     difficulty = Column(String, nullable=True)
     
+    public_cases = Column(Boolean, nullable = False, default = False)
+    
     submissions = relationship("Submission", back_populates="problem")
     
     def to_dict(self):

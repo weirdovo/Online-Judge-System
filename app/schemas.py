@@ -60,3 +60,6 @@ class new_language(BaseModel):
     run_cmd : str
     time_limit : Optional[float] = None
     memory_limit : Optional[int] = None
+    
+class public_cases(BaseModel):
+    public_cases : bool = False
