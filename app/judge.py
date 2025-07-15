@@ -5,52 +5,66 @@ import psutil
 import time
 import os
 import asyncio
+import shlex
 
 from fastapi import Depends
 from sqlalchemy.orm import Session
-from app.models import Problem, Submission
+from app.models import Problem, Submission, Language
+from app.schemas import submission
 from app.utils import get_db
 
-async def run_judge(id : int, code : str, db : Session = Depends(get_db)):
+async def run_judge(id : int, sub : submission, db : Session = Depends(get_db)):
     task = db.query(Submission).filter_by(id = id).first()
     problem = db.query(Problem).filter_by(id = task.problem_id).first()
+    language = db.query(Language).filter_by(name = sub.language).first()
+    code = sub.code
     try:
-        with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".py") as tmp_code:
-            tmp_code.write(code)
-            tmp_code.flush()
-            code_path = tmp_code.name
-        score = 0
-        detail = []
-        counts = len(problem.testcases) * 10
-        for i, case in enumerate(problem.testcases):
-            status = await asyncio.to_thread(judge_case, case, task.language, 
-                                             problem.time_limit, problem.memory_limit, code_path)
-            status["id"] = i+1
-            if status["status"] == "AC":
-                score = score + 10
-            detail.append(status)
-        task.status = "success"
-        task.counts = counts
-        task.score = score
-        task.detail = detail    
-        db.commit()
-        db.refresh(task)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            src_path = os.path.join(tmpdir, "code" + language.file_ext)
+            exe_path = os.path.join(tmpdir, "exec.out")
+            with open(src_path, "w") as f:
+                    f.write(code)
+            if language.compile_cmd:
+                compile_cmd = language.compile_cmd.format(src=src_path, exe=exe_path)
+                compile_proc = subprocess.run(shlex.split(compile_cmd), capture_output=True)
+                if compile_proc.returncode != 0:
+                    task.status = "error"
+                    task.detail = {"status" : "CE"}
+                    db.commit()
+                    return
+            else:
+                exe_path = src_path  
+            score = 0
+            detail = []
+            counts = len(problem.testcases) * 10
+            for i, case in enumerate(problem.testcases):
+                run_cmd = language.run_cmd.format(src=src_path, exe=exe_path)
+                status = await asyncio.to_thread(judge_case, case, run_cmd,
+                                                    problem.time_limit, problem.memory_limit)
+                status["id"] = i+1
+                if status["status"] == "AC":
+                    score = score + 10
+                detail.append(status)
+            task.status = "success"
+            task.counts = counts
+            task.score = score
+            task.detail = detail    
+            db.commit()
+            db.refresh(task)
     except Exception as e:
         task.status = "error"
+        # ???
         db.commit()
         db.refresh(task)
-    finally:
-        if 'code_path' in locals() and os.path.exists(code_path):
-            os.remove(code_path)
 
-def judge_case(case, language : str, tl : float, ml : int, code_path : str):
+def judge_case(case, run_cmd : str, tl : float, ml : int):
     result_holder = {"status" : "OK", "time" : 0.0, "memory" : 0}
     with tempfile.NamedTemporaryFile(mode = 'w+', delete = False) as tmp_in:
         tmp_in.write(case["input"])
         tmp_in.flush()
         try:
             proc = subprocess.Popen(
-                [language, code_path],
+                shlex.split(run_cmd),
                 stdin=open(tmp_in.name, "r"),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
@@ -68,11 +82,12 @@ def judge_case(case, language : str, tl : float, ml : int, code_path : str):
                 output = stdout.decode().strip()
                 if result_holder["status"] != "OK":
                     return result_holder
-                if "SyntaxError" in stderr.decode():
-                    result_holder["status"] = "CE"
                 if proc.returncode != 0:
-                    result_holder["status"] = "RE"
-                
+                    if "SyntaxError" in stderr.decode() or "error:" in stderr.decode():
+                        result_holder["status"] = "CE"
+                    else:
+                        result_holder["status"] = "RE"
+                        
                 if output == case["output"].strip():
                     result_holder["status"] = "AC"
                 else:
