@@ -75,6 +75,8 @@ class Submission(Base):
         self.counts = 0
         
 class Language(Base):
+    __tablename__ = "languages"
+    id = Column(Integer, primary_key = True, index = True)
     name = Column(String, nullable = False, unique = True)
     file_ext = Column(String, nullable = False)
     compile_cmd = Column(String, nullable = True)
