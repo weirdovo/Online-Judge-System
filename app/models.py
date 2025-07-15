@@ -73,3 +73,11 @@ class Submission(Base):
         self.status = "pending"
         self.score = 0
         self.counts = 0
+        
+class Language(Base):
+    name = Column(String, nullable = False, unique = True)
+    file_ext = Column(String, nullable = False)
+    compile_cmd = Column(String, nullable = True)
+    run_cmd = Column(String, nullable = False)
+    time_limit = Column(Float, nullable = True, default = 3.0)
+    memory_limit = Column(Integer, nullable = True, default = 128)
