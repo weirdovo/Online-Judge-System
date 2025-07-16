@@ -25,4 +25,6 @@ async def reset_system(request: Request, db: Session = Depends(get_db)):
     db.add_all([admin, python])
     db.commit()
     
+    request.session.clear()
+    
     return make_response(200, "system reset successfully", None)
