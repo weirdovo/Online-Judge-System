@@ -62,7 +62,12 @@ async def get_submission(request : Request, lis : submission_list = Depends(), d
     if admin_guard(request) and (lis.user_id is None):
         lis.user_id = user_id
     
-    query = db.query(Submission)
+    query = db.query(
+        Submission.id,
+        Submission.status,
+        Submission.score,
+        Submission.counts
+    )
     if lis.user_id is not None:
         query = query.filter(Submission.user_id == lis.user_id)
     if lis.problem_id is not None:
