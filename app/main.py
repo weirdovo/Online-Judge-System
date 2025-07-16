@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request, Depends
 from starlette.middleware.sessions import SessionMiddleware
 from app import problems, users, submissions, languages, logs, reset
+from app import export_data, import_data
 from app.models import User, Language
 from app.problems import make_response
 from app.db import engine, Base
@@ -45,6 +46,8 @@ app.include_router(submissions.router)
 app.include_router(languages.router)
 app.include_router(logs.router)
 app.include_router(reset.router)
+app.include_router(export_data.router)
+app.include_router(import_data.router)
 
 @app.get("/")
 async def welcome():
@@ -53,19 +56,22 @@ async def welcome():
 # handle different kinds of exceptions
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    path = str(request.url.path)
-    if "/problems" in path:
-        msg = "invalid format"
-    elif "/login" in path:
-        msg = "invalid params"
-    elif "/admin" in path:
-        msg = "invalid params"
-    elif "/users" in path:
-        msg = "invalid params"
-    elif "/submissions" in path:
-        msg = "invalid params"
-    elif "/languages" in path:
-        msg = "invalid params"
-    elif "/logs" in path:
-        msg = "invalid params"
+    # path = str(request.url.path)
+    # if "/problems" in path:
+    #     msg = "invalid format"
+    # elif "/login" in path:
+    #     msg = "invalid params"
+    # elif "/admin" in path:
+    #     msg = "invalid params"
+    # elif "/users" in path:
+    #     msg = "invalid params"
+    # elif "/submissions" in path:
+    #     msg = "invalid params"
+    # elif "/languages" in path:
+    #     msg = "invalid params"
+    # elif "/logs" in path:
+    #     msg = "invalid params"
+    # elif "/import" in path:
+    #     msg = "invalid params"
+    msg= "invalid params"
     return make_response(400, msg, None)    
