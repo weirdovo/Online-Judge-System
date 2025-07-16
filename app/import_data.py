@@ -4,25 +4,24 @@ from app.utils import make_response, get_db, admin_guard
 from app.models import User, Problem, Submission
 import json
 
-router = APIRouter(prefix = "/api/import")
+router = APIRouter(prefix="/api/import")
+
 
 @router.post("/")
 async def import_data(
-    request: Request,
-    file: UploadFile = File(),
-    db: Session = Depends(get_db)
+    request: Request, file: UploadFile = File(), db: Session = Depends(get_db)
 ):
     if "user_id" not in request.session:
         return make_response(401, "not logged in", None)
     if admin_guard(request):
         return make_response(403, "permission denied", None)
 
-    if not file.filename.endswith('.json'):
+    if not file.filename.endswith(".json"):
         return make_response(400, "only JSON files", None)
 
     try:
         content = await file.read()
-        data = json.loads(content.decode('utf-8'))
+        data = json.loads(content.decode("utf-8"))
         for key in ["users", "problems", "submissions"]:
             if key not in data or not isinstance(data[key], list):
                 return make_response(400, f"missing or invalid '{key}'", None)
