@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+import bcrypt
 from app.utils import make_response, admin_guard, get_db, newuser_validation
 from app.models import User
 from app.schemas import New_User, Role
@@ -10,9 +11,8 @@ router = APIRouter(prefix = "/api")
 @router.post("/auth/login")
 async def login(request : Request, user_ : New_User, db : Session = Depends(get_db)):
     user = db.query(User).filter_by(username = user_.username).first()
-    if not user or user.password != user_.password:
+    if not user or not bcrypt.checkpw(user_.password.encode('utf-8'), user.password.encode('utf-8')):
         return make_response(401, "wrong username or password", None)
-    
     if user.is_banned:
         return make_response(403, "banned user", None)
     
@@ -35,14 +35,12 @@ async def logout(request : Request):
     
 @router.post("/users/admin")
 async def create_admin(request : Request, user_ : New_User, db : Session = Depends(get_db)):
-
     if not newuser_validation(user_):
         return make_response(400, "invalid username or password", None) 
-
     if admin_guard(request):
         return make_response(403, "Permission denied", None)
-    
-    new_admin = User(username = user_.username, password = user_.password, role = "admin")
+    hashed_password = bcrypt.hashpw(user_.password.encode('utf-8'), bcrypt.gensalt())
+    new_admin = User(username = user_.username, password = hashed_password.decode('utf-8'), role = "admin")
     db.add(new_admin)
     try :
         db.commit()
@@ -59,7 +57,8 @@ async def create_admin(request : Request, user_ : New_User, db : Session = Depen
 async def sign_in(user_ : New_User, db : Session = Depends(get_db)):
     if not newuser_validation(user_):
         return make_response(400, "invalid username or password", None) 
-    new_user = User(username = user_.username, password = user_.password)
+    hashed_password = bcrypt.hashpw(user_.password.encode('utf-8'), bcrypt.gensalt())
+    new_user = User(username = user_.username, password = hashed_password.decode('utf-8'))
     db.add(new_user)
     try:
         db.commit()

@@ -8,6 +8,7 @@ from app.utils import get_db
 from fastapi.exceptions import RequestValidationError
 from sqlalchemy.orm import Session
 from contextlib import asynccontextmanager
+import bcrypt
 
 Base.metadata.create_all(bind = engine) #
 
@@ -17,7 +18,9 @@ async def lifespan(app: FastAPI):
     exist_admin = db.query(User).filter_by(username = "admin").first()
     exist_python = db.query(Language).filter_by(name = "python").first()
     if not exist_admin:
-        admin = User(username = "admin", password = "admintestpassword", role = "admin")  # Create administrator
+        admin = User(username = "admin", 
+                     password = bcrypt.hashpw("admintestpassword".encode('utf-8'), bcrypt.gensalt()).decode('utf-8'), 
+                     role = "admin")  # Create administrator
         db.add(admin)
         db.commit()
         db.refresh(admin)
