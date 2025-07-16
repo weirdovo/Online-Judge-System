@@ -76,9 +76,6 @@ async def sign_in(user_ : New_User, db : Session = Depends(get_db)):
       
 @router.get("/users/{user_id}")
 async def get_info(request : Request, user_id : int, db : Session = Depends(get_db)):
-    if not str(user_id).isdigit():
-        return make_response(400, "invalid params", None)
-    user_id = str(user_id)
     this_id = request.session.get("user_id")
     if not this_id:
         return make_response(401, "not logged in", None)
