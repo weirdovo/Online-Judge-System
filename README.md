@@ -1,112 +1,44 @@
-# Python PA2 - Online Judge System 
+# Online Judge System
 
-## 项目概述
+This project is a lightweight online judge backend built with FastAPI and SQLAlchemy. It was developed as a course project, but the implementation goes beyond a minimal assignment template and delivers a usable judging workflow for programming problems, user management, and administrative maintenance.
 
-这是 Python 课程 PA2 作业的仓库。
+The system supports the full lifecycle of an online judge platform: user registration and login, problem publishing, code submission, asynchronous judging, result querying, access logging, language registration, and dataset import/export. It is designed as a REST-style backend with clear module boundaries and a database-backed state model.
 
-### 作业要求
+## Project Overview
 
-详见文档 <https://keg-course.github.io/python-docs/oj/>
+The core goal of this project is to provide a simple but complete OJ service for programming exercises. Users can create accounts, browse problems, submit source code, and retrieve judging results. Administrators can manage user roles, inspect access logs, register or update supported languages, reset the system state, and migrate platform data through JSON import/export interfaces.
 
-## 仓库结构
+The backend uses session-based authentication and role checks to separate regular user operations from privileged administration actions. A default `admin` account and a built-in `python` language entry are initialized automatically when the service starts.
 
-```
+## Main Capabilities
+
+- User authentication with registration, login, logout, role updates, and ban control
+- Problem management with structured statements, samples, constraints, test cases, and visibility settings for judging details
+- Multi-language submission handling through dynamically registered language definitions
+- Asynchronous judging with compile-and-run workflows, per-case scoring, and status reporting
+- Support for common judge outcomes such as `AC`, `WA`, `CE`, `RE`, `TLE`, and `MLE`
+- Submission history queries, result lookup, and detailed judge log access
+- Administrative audit logs for submission detail access
+- JSON-based system export and import for users, problems, and submissions
+
+## Technical Design
+
+The application is implemented with FastAPI as the web framework and SQLAlchemy as the ORM layer, using SQLite for persistence. Pydantic schemas are used for request validation, and Starlette's session middleware is used to maintain login state.
+
+The judging pipeline writes submitted code into a temporary workspace, optionally compiles it according to the selected language definition, executes it against stored test cases, monitors time and memory usage, and records detailed per-case results in the database. This keeps the judge logic isolated from the API layer while allowing submissions to be processed asynchronously.
+
+## Repository Structure
+
+```text
 .
-├── app/                    # 主应用代码
-│   ├── __init__.py
-│   └── main.py            # FastAPI 应用入口
-├── tests/                 # 测试用例
-│   ├── conftest.py        # pytest 配置
-│   ├── test_helpers.py    # 测试辅助函数
-│   ├── test_api_*.py      # 各模块 API 测试
-│   └── ...
-├── .gitlab-ci.yml         # CI/CD 配置
-├── requirements.txt       # Python 依赖
-└── README.md             # 本文件
+├── app/          # FastAPI application, database models, judge logic, and API routers
+├── tests/        # Automated API tests
+├── spj_test/     # Additional special-judge related tests
+├── report/       # Project report and supporting images
+├── requirements.txt
+└── README.md
 ```
 
-## 如何运行测试
+## Summary
 
-### 1. 安装依赖
-```bash
-pip install -r requirements.txt
-```
-
-### 2. 运行测试
-```bash
-# 运行全部测试
-python -m pytest tests/ -v
-
-# 运行指定模块测试
-python -m pytest tests/test_api_problems.py -v
-
-# 运行单个测试
-python -m pytest tests/test_api_problems.py::test_add_problem -v
-```
-
-### 3. 测试结果
-- **PASSED** - 测试通过
-- **FAILED** - 测试失败，需要实现相应功能
-
-## 如何启动应用
-
-```bash
-# 启动开发服务器
-uvicorn app.main:app --reload
-
-# 访问应用
-# http://localhost:8000 - 主页面
-# http://localhost:8000/docs - API 文档
-```
-
-## CI/CD 说明
-
-### 什么是 CI？
-CI (Continuous Integration) 持续集成，每次提交代码时系统会自动：
-
-1. 拉取代码
-2. 安装依赖 (`pip install -r requirements.txt`)
-3. 运行测试 (`pytest tests/ -v`)
-4. 显示结果
-
-### CI 的作用
-- 自动检测错误 - 提交后立即知道代码状态
-- 保证代码质量 - 所有功能都有测试覆盖
-- 便于团队协作 - 避免提交有问题的代码
-- 快速反馈 - 无需本地测试，推送后即可查看结果
-
-### 查看 CI 结果
-1. 进入 GitLab 项目页面，点击 "CI/CD" → "Pipelines"
-2. 绿色表示测试通过，红色表示失败
-3. 点击失败的任务可以查看详细错误信息
-
-## 开发建议
-
-### 开发流程
-1. **看测试** - 先查看 `tests/` 目录了解需要实现的功能
-2. **写代码** - 在 `app/` 目录实现功能
-3. **跑测试** - 运行 `pytest tests/ -v` 检查
-4. **提交** - `git add . && git commit -m "实现XX功能"`
-5. **推送** - `git push` 并查看 CI 结果
-
-### 测试驱动开发
-- 先看失败的测试，了解要实现什么
-- 写最简单的代码让测试通过
-- 逐步完善功能
-
-## 参考资料
-
-- [FastAPI 官方文档](https://fastapi.tiangolo.com/)
-- [pytest 测试框架](https://docs.pytest.org/)
-- [GitLab CI/CD 文档](https://docs.gitlab.com/ee/ci/)
-
-## 常见问题
-
-**Q: 测试失败怎么办？**
-A: 看测试输出的错误信息，按照提示实现对应功能。
-
-**Q: CI 一直失败？**
-A: 目前CI还没配置好，暂时不用管这个事情
-
-**Q: 如何调试测试？**
-A: 用 `python -m pytest tests/test_xxx.py::test_function -v -s` 运行单个测试查看详细输出。
+This repository presents a compact online judge system focused on backend engineering: structured problem storage, permission-aware APIs, extensible language support, asynchronous code judging, and operational tooling for administrators. It is intended as a practical demonstration of how a small OJ platform can be implemented with Python web technologies in a clean and modular way.
